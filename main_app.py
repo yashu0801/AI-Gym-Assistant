@@ -9,7 +9,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# ---------------- SESSION ----------------
+# ---------------- SESSION STATE ----------------
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
@@ -27,7 +27,13 @@ if "steps" not in st.session_state:
 if "calories_burned" not in st.session_state:
     st.session_state.calories_burned = 0
 
-# ---------------- CSS ----------------
+if "bmi_value" not in st.session_state:
+    st.session_state.bmi_value = 0
+
+if "food_result" not in st.session_state:
+    st.session_state.food_result = "No food analyzed"
+
+# ---------------- PREMIUM CSS ----------------
 st.markdown("""
 <style>
 
@@ -39,7 +45,7 @@ background-attachment:fixed;
 }
 
 .main .block-container{
-background:rgba(0,0,0,0.75);
+background:rgba(0,0,0,0.78);
 padding:2rem;
 border-radius:20px;
 margin-top:20px;
@@ -93,11 +99,11 @@ if not st.session_state.logged_in:
     )
 
     st.markdown(
-        "<div class='hero-sub'>AI Assisted Smart Fitness Platform</div>",
+        "<div class='hero-sub'>Cloud Based Intelligent Fitness Platform</div>",
         unsafe_allow_html=True
     )
 
-    # -------- IMAGE SLIDER --------
+    # ---------------- IMAGE SLIDER ----------------
     slider = """
     <div class="slider">
       <img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438" class="slide">
@@ -147,7 +153,7 @@ if not st.session_state.logged_in:
         ["Login", "Register"]
     )
 
-    # -------- REGISTER --------
+    # ---------------- REGISTER ----------------
     if menu == "Register":
 
         new_email = st.text_input("Email ID")
@@ -162,7 +168,7 @@ if not st.session_state.logged_in:
 
             st.success("Account Created Successfully")
 
-    # -------- LOGIN --------
+    # ---------------- LOGIN ----------------
     else:
 
         email = st.text_input("Email")
@@ -206,8 +212,8 @@ with st.sidebar:
             "Workout Reminder",
             "AI Food Analyzer",
             "AI Chatbot",
-            "PDF Reports",
-            "Analytics"
+            "Analytics",
+            "Generate Report"
         ],
         icons=[
             "house",
@@ -216,8 +222,8 @@ with st.sidebar:
             "bell",
             "image",
             "robot",
-            "file-earmark-pdf",
-            "bar-chart"
+            "bar-chart",
+            "file-earmark-text"
         ],
         default_index=0
     )
@@ -229,7 +235,7 @@ st.markdown(
 )
 
 st.markdown(
-    "<div class='hero-sub'>Cloud Based Smart Fitness Monitoring System</div>",
+    "<div class='hero-sub'>AI Assisted Smart Health Monitoring System</div>",
     unsafe_allow_html=True
 )
 
@@ -268,7 +274,7 @@ if selected == "Dashboard":
         "Dashboard dynamically updates based on user activities."
     )
 
-# ---------------- BMI ----------------
+# ---------------- BMI CALCULATOR ----------------
 elif selected == "BMI Calculator":
 
     st.subheader("📏 BMI Calculator")
@@ -287,19 +293,61 @@ elif selected == "BMI Calculator":
 
         bmi = weight / ((height / 100) ** 2)
 
+        st.session_state.bmi_value = bmi
+
         st.metric(
             "BMI",
             f"{bmi:.2f}"
         )
 
         if bmi < 18.5:
+
             st.warning("Underweight")
 
+            st.info("""
+Recommended Suggestions:
+- Increase protein intake
+- Consume healthy calories
+- Include nuts, milk, eggs, banana
+- Strength training recommended
+- Sleep minimum 7-8 hours
+""")
+
         elif bmi < 25:
+
             st.success("Healthy")
 
-        else:
+            st.info("""
+Recommended Suggestions:
+- Maintain balanced diet
+- Continue regular workouts
+- Drink enough water
+- Include cardio + strength training
+""")
+
+        elif bmi < 30:
+
             st.error("Overweight")
+
+            st.info("""
+Recommended Suggestions:
+- Reduce junk food intake
+- Increase walking and cardio
+- Maintain calorie deficit
+- Avoid sugary drinks
+""")
+
+        else:
+
+            st.error("Obese")
+
+            st.info("""
+Recommended Suggestions:
+- Follow strict calorie control
+- Daily cardio recommended
+- Avoid processed foods
+- Maintain regular exercise
+""")
 
 # ---------------- WALKING TRACKER ----------------
 elif selected == "Walking Tracker":
@@ -349,10 +397,10 @@ elif selected == "Walking Tracker":
             "Daily walking goal not achieved."
         )
 
-# ---------------- REMINDER ----------------
+# ---------------- WORKOUT REMINDER ----------------
 elif selected == "Workout Reminder":
 
-    st.subheader("⏰ Workout Reminder")
+    st.subheader("⏰ Smart Workout Reminder")
 
     workout = st.radio(
         "Did you complete today's workout?",
@@ -405,43 +453,66 @@ elif selected == "AI Food Analyzer":
         calories = 250
         category = "Moderate"
 
-        if "pizza" in filename:
+        # ---------------- FOOD DATABASE ----------------
 
-            food_name = "Pizza"
-            calories = 420
-            category = "Junk Food"
+        food_database = {
 
-            st.session_state.consistency_score -= 5
+            "pizza": ("Pizza", 420, "Junk Food"),
+            "burger": ("Burger", 350, "Fast Food"),
+            "salad": ("Salad", 120, "Healthy Food"),
+            "apple": ("Apple", 80, "Healthy Food"),
+            "rice": ("Rice", 200, "Balanced Meal"),
+            "banana": ("Banana", 90, "Healthy Food"),
+            "chicken": ("Chicken", 280, "Protein Rich"),
+            "egg": ("Egg", 70, "Protein Rich"),
+            "fries": ("French Fries", 300, "Junk Food"),
+            "sandwich": ("Sandwich", 250, "Balanced Meal"),
+            "dosa": ("Dosa", 180, "South Indian Meal"),
+            "idli": ("Idli", 120, "Healthy Food"),
+            "biryani": ("Biryani", 450, "High Calorie Meal"),
+            "cake": ("Cake", 400, "Dessert"),
+            "icecream": ("Ice Cream", 320, "Dessert"),
+            "paneer": ("Paneer", 260, "Protein Rich"),
+            "milk": ("Milk", 130, "Healthy Drink"),
+            "juice": ("Fruit Juice", 140, "Healthy Drink"),
+            "noodles": ("Noodles", 330, "Fast Food"),
+            "oats": ("Oats", 150, "Healthy Food")
+        }
 
-        elif "burger" in filename:
+        detected = False
 
-            food_name = "Burger"
-            calories = 350
-            category = "Fast Food"
+        for key in food_database:
 
-            st.session_state.consistency_score -= 5
+            if key in filename:
 
-        elif "salad" in filename:
+                food_name, calories, category = food_database[key]
 
-            food_name = "Salad"
-            calories = 120
-            category = "Healthy Food"
+                detected = True
 
-            st.session_state.consistency_score += 5
+                break
 
-        elif "apple" in filename:
+        healthy_foods = [
+            "Healthy Food",
+            "Protein Rich",
+            "Healthy Drink",
+            "Balanced Meal"
+        ]
 
-            food_name = "Apple"
-            calories = 80
-            category = "Healthy Food"
+        if category in healthy_foods:
 
-            st.session_state.consistency_score += 5
+            st.session_state.consistency_score = min(
+                st.session_state.consistency_score + 5,
+                100
+            )
 
-        elif "rice" in filename:
+        else:
 
-            food_name = "Rice"
-            calories = 200
-            category = "Balanced Meal"
+            st.session_state.consistency_score = max(
+                st.session_state.consistency_score - 5,
+                0
+            )
+
+        st.session_state.food_result = food_name
 
         st.success(
             f"Detected Food: {food_name}"
@@ -456,7 +527,68 @@ elif selected == "AI Food Analyzer":
             f"Food Category: {category}"
         )
 
-# ---------------- CHATBOT ----------------
+        # ---------------- HEALTH SUGGESTIONS ----------------
+
+        if category == "Junk Food":
+
+            st.warning("""
+Suggestions:
+- Reduce junk food intake
+- Increase cardio workouts
+- Avoid excessive calories
+""")
+
+        elif category == "Protein Rich":
+
+            st.success("""
+Suggestions:
+- Excellent for muscle growth
+- Maintain workout consistency
+- Good post-workout nutrition
+""")
+
+        elif category == "Healthy Food":
+
+            st.success("""
+Suggestions:
+- Great nutritional choice
+- Helps maintain fitness goals
+- Continue balanced diet
+""")
+
+        elif category == "Dessert":
+
+            st.warning("""
+Suggestions:
+- Consume in moderation
+- Balance with physical activity
+- Avoid excess sugar intake
+""")
+
+        else:
+
+            st.info("""
+Suggestions:
+- Maintain balanced nutrition
+- Include regular physical activity
+- Drink enough water
+""")
+
+        if not detected:
+
+            st.warning("""
+Food not clearly recognized.
+
+For better accuracy:
+Rename image properly.
+
+Examples:
+pizza.jpg
+burger.png
+salad.jpeg
+""")
+
+# ---------------- AI CHATBOT ----------------
 elif selected == "AI Chatbot":
 
     st.subheader("🤖 AI Fitness Coach")
@@ -507,26 +639,6 @@ and hydration.
 
         st.success(ans)
 
-# ---------------- PDF REPORTS ----------------
-elif selected == "PDF Reports":
-
-    st.subheader("📄 Upload Fitness Report")
-
-    pdf = st.file_uploader(
-        "Upload PDF Report",
-        type=["pdf"]
-    )
-
-    if pdf:
-
-        st.success(
-            "Fitness Report Uploaded Successfully"
-        )
-
-        st.info(
-            "Uploaded reports can be digitally managed inside the platform."
-        )
-
 # ---------------- ANALYTICS ----------------
 elif selected == "Analytics":
 
@@ -573,9 +685,80 @@ elif selected == "Analytics":
         f"Overall Consistency Score: {score}%"
     )
 
+# ---------------- GENERATE REPORT ----------------
+elif selected == "Generate Report":
+
+    st.subheader("📄 Generate Final Fitness Report")
+
+    bmi = st.session_state.bmi_value
+    steps = st.session_state.steps
+    calories = st.session_state.calories_burned
+    score = st.session_state.consistency_score
+    food = st.session_state.food_result
+
+    if bmi < 18.5:
+        bmi_status = "Underweight"
+
+    elif bmi < 25:
+        bmi_status = "Healthy"
+
+    elif bmi < 30:
+        bmi_status = "Overweight"
+
+    else:
+        bmi_status = "Obese"
+
+    report = f"""
+AI GYM ASSISTANT PRO
+---------------------------------
+
+User:
+{st.session_state.current_user}
+
+BMI:
+{bmi:.2f}
+
+BMI Status:
+{bmi_status}
+
+Daily Steps:
+{steps}
+
+Calories Burned:
+{calories:.0f} kcal
+
+Food Analysis:
+{food}
+
+Consistency Score:
+{score}%
+
+Health Suggestions:
+- Maintain regular workouts
+- Drink sufficient water
+- Follow balanced diet
+- Maintain proper sleep cycle
+
+Project:
+AI Powered Fitness Intelligence Platform
+"""
+
+    st.text_area(
+        "Generated Fitness Report",
+        report,
+        height=350
+    )
+
+    st.download_button(
+        label="⬇ Download Report",
+        data=report,
+        file_name="fitness_report.txt",
+        mime="text/plain"
+    )
+
 # ---------------- FOOTER ----------------
 st.markdown("---")
 
 st.caption(
-    "AI Gym Assistant Pro | Python + Streamlit"
+    "AI Gym Assistant Pro | Python + Streamlit + AI"
 )
